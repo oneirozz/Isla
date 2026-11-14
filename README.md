@@ -29,6 +29,19 @@ Explorador, la canción en curso o, si no hay nada, la hora.
 | Portapapeles | ❌ | A propósito: usa `Win+V`, que ya es nativo |
 | Contador de FPS | ❌ | Ver «Limitaciones» |
 
+## Capturas
+
+Isla desplegada al pasar el ratón por encima:
+
+![Isla desplegada con la pista en curso, reloj, recordatorio y métricas](docs/screenshots/isla-desplegada.png)
+
+Al recogerse, la píldora deja a la vista la actividad en curso:
+
+![Píldora recogida mostrando la canción en curso en lugar de la hora](docs/screenshots/pildora-musica.png)
+
+Capturas tomadas en 1920×1080 al 100 % de escala (Windows 10), recortadas a la
+zona superior de la pantalla.
+
 ## Requisitos
 
 - Windows 10 19041 o superior (Windows 11 incluido), x64.
@@ -318,6 +331,7 @@ isla/
     HardwareService.cs            detección de GPU y recomendación de efectos
   Interop/NativeMethods.cs        estilos de ventana, atajos, sonido
   Diagnostics/Log.cs              log a archivo
+  docs/screenshots/               capturas para el README
   app.manifest                    DPI por monitor, compatibilidad Win10/11
 ```
 
