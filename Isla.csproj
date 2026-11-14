@@ -1,0 +1,28 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net8.0-windows10.0.19041.0</TargetFramework>
+    <SupportedOSPlatformVersion>10.0.19041.0</SupportedOSPlatformVersion>
+    <UseWPF>true</UseWPF>
+    <UseWindowsForms>true</UseWindowsForms>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
+    <AssemblyName>Isla</AssemblyName>
+    <RootNamespace>Isla</RootNamespace>
+    <Version>0.1.0</Version>
+    <Product>Isla</Product>
+    <Description>Dynamic Island para Windows 10/11</Description>
+    <!-- WFO0003 avisa del DPI del manifiesto; esta app es WPF, no WinForms. -->
+    <NoWarn>$(NoWarn);WFO0003;WFAC010</NoWarn>
+  </PropertyGroup>
+
+  <!-- WPF y WinForms comparten nombres (Application, Color, MouseEventArgs).
+       Quitamos los using implicitos de WinForms para que no colisionen. -->
+  <ItemGroup>
+    <Using Remove="System.Windows.Forms" />
+    <Using Remove="System.Drawing" />
+  </ItemGroup>
+
+</Project>
