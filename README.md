@@ -361,11 +361,10 @@ excepción.
 
 ## Contribuir y apoyar
 
-Los fallos y las ideas van en
-[Issues](https://github.com/oneirozz/Isla/issues). No hay plantilla ni ceremonia:
-cuenta qué esperabas, qué pasó y, si puedes, adjunta `%LOCALAPPDATA%\Isla\isla.log`.
-Las propuestas de código se agradecen como pull requests pequeñas y con un objetivo
-claro.
+Los fallos y las ideas van en [Issues](https://github.com/oneirozz/Isla/issues), con
+plantilla para cada caso. Para enviar código, lee antes
+[`CONTRIBUTING.md`](CONTRIBUTING.md): explica cómo compilar, qué estilo sigue el
+proyecto y qué cosas no se aceptan por diseño.
 
 Isla es gratis y seguirá siéndolo: licencia MIT, sin cuentas, sin telemetría y sin
 funciones de pago. Si te resulta útil y quieres que le dedique más horas, puedes

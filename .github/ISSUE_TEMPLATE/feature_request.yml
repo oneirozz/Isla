@@ -1,0 +1,59 @@
+name: Idea
+description: Proponer una función o un cambio de comportamiento
+title: "[Idea] "
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Cuenta primero el problema, no la solución. Así se pueden valorar varias
+        formas de resolverlo.
+
+  - type: textarea
+    id: problema
+    attributes:
+      label: El problema
+      description: Qué te falta o qué te molesta hoy.
+      placeholder: Cuando copio muchas fotos no sé cuánto queda, la píldora solo dice "Copiando".
+    validations:
+      required: true
+
+  - type: textarea
+    id: propuesta
+    attributes:
+      label: Qué propones
+      description: Tu idea, aunque sea aproximada.
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternativas
+    attributes:
+      label: Alternativas que has considerado
+      description: Otras formas de resolverlo, o cómo lo haces ahora sin la función.
+    validations:
+      required: false
+
+  - type: dropdown
+    id: modulo
+    attributes:
+      label: Qué parte toca
+      options:
+        - La isla en sí (aspecto, tamaño, animaciones)
+        - La píldora recogida
+        - Música
+        - Actividad del Explorador
+        - Recordatorios
+        - Estante de archivos
+        - Lanzador
+        - Bandeja, atajos o inicio con Windows
+        - Otra cosa
+    validations:
+      required: true
+
+  - type: markdown
+    attributes:
+      value: |
+        Ten en cuenta las [limitaciones honestas](https://github.com/oneirozz/Isla#limitaciones-honestas):
+        hay cosas que no se van a hacer a propósito, como un contador de FPS o un gestor
+        de portapapeles.

@@ -1,0 +1,8 @@
+blank_issues_enabled: true
+contact_links:
+  - name: Guía para contribuir
+    url: https://github.com/oneirozz/Isla/blob/main/CONTRIBUTING.md
+    about: Cómo compilar, qué estilo seguir y qué no se acepta.
+  - name: Apoyar el proyecto en Ko-fi
+    url: https://ko-fi.com/E6N32AMGD4
+    about: Isla es gratis y MIT. Si te ahorra tiempo, puedes invitar a un café.

@@ -1,0 +1,90 @@
+name: Fallo
+description: Algo no funciona como debería
+title: "[Fallo] "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Antes de enviar, mira si ya está reportado en los issues abiertos.
+        Cuanto más concreto, más fácil es reproducirlo y arreglarlo.
+
+  - type: textarea
+    id: que-pasa
+    attributes:
+      label: Qué pasa
+      description: El fallo, en dos o tres frases.
+      placeholder: Al copiar una carpeta grande la píldora se queda en blanco hasta que termina.
+    validations:
+      required: true
+
+  - type: textarea
+    id: esperado
+    attributes:
+      label: Qué esperabas
+      description: Qué debería haber pasado en su lugar.
+    validations:
+      required: true
+
+  - type: textarea
+    id: pasos
+    attributes:
+      label: Cómo reproducirlo
+      description: Los pasos en orden, empezando por abrir Isla.
+      placeholder: |
+        1. Abrir Isla
+        2. Copiar una carpeta de 2 GB con el Explorador
+        3. Pasar el cursor por el borde superior
+    validations:
+      required: true
+
+  - type: input
+    id: windows
+    attributes:
+      label: Versión de Windows
+      description: Saca el dato con `Win+R` → `winver`.
+      placeholder: Windows 10 LTSC 21H2, 19044.2360, x64
+    validations:
+      required: true
+
+  - type: dropdown
+    id: origen
+    attributes:
+      label: Cómo ejecutas Isla
+      options:
+        - El .exe descargado del release
+        - Compilada por mí desde el código
+    validations:
+      required: true
+
+  - type: dropdown
+    id: efectos
+    attributes:
+      label: Modo de efectos
+      description: Está en el menú de la bandeja.
+      options:
+        - Automático (el que elige la app)
+        - Activados a la fuerza
+        - Desactivados a la fuerza
+        - No lo sé
+    validations:
+      required: false
+
+  - type: textarea
+    id: log
+    attributes:
+      label: Log
+      description: |
+        `%LOCALAPPDATA%\Isla\isla.log`. Pégalo o adjúntalo. Cada arranque deja una
+        línea `--- arranque ---`, así que basta con la sesión donde ocurrió.
+      render: text
+    validations:
+      required: false
+
+  - type: textarea
+    id: extra
+    attributes:
+      label: Capturas o datos extra
+      description: Si el fallo es visual, una captura recortada a la isla ayuda. Indica resolución y escala de Windows.
+    validations:
+      required: false
