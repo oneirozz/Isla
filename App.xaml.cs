@@ -114,7 +114,7 @@ public partial class App : Application
     {
         _tray = new Forms.NotifyIcon
         {
-            Icon = BuildIcon(),
+            Icon = LoadTrayIcon(),
             Text = "Isla",
             Visible = true,
         };
@@ -179,6 +179,7 @@ public partial class App : Application
             if (File.Exists(path)) Process.Start(new ProcessStartInfo(path) { UseShellExecute = true });
         });
         menu.Items.Add(new Forms.ToolStripSeparator());
+        menu.Items.Add("Acerca de Isla", null, (_, _) => ShowAbout());
         menu.Items.Add("Salir", null, (_, _) => Shutdown());
 
         _tray.ContextMenuStrip = menu;
@@ -247,6 +248,48 @@ public partial class App : Application
         {
             Log.Write("no se pudo abrir la carpeta de datos", ex);
         }
+    }
+
+    private static void ShowAbout()
+    {
+        var version = typeof(App).Assembly.GetName().Version;
+        var numero = version is null ? "1.0.0" : version.ToString(3);
+
+        MessageBox.Show(
+            $"Isla {numero}\n\n" +
+            "Una isla dinámica para Windows 10 y 11.\n" +
+            "Actividad, música y recordatorios en una píldora.\n\n" +
+            "Licencia MIT, 2026 Oneirozz.\n" +
+            "Sin cuentas, sin telemetría y sin conexiones de red.\n\n" +
+            "github.com/oneirozz/Isla",
+            "Acerca de Isla",
+            MessageBoxButton.OK,
+            MessageBoxImage.Information);
+    }
+
+    /// <summary>
+    /// Icono de la bandeja: el mismo Isla.ico del ejecutable, elegido al tamaño
+    /// nativo para que no salga borroso. Si algo falla, se dibuja en memoria.
+    /// </summary>
+    private static Icon LoadTrayIcon()
+    {
+        try
+        {
+            var stream = GetResourceStream(new Uri("pack://application:,,,/Isla.ico"))?.Stream;
+            if (stream is not null)
+            {
+                using (stream)
+                {
+                    return new Icon(stream, Forms.SystemInformation.SmallIconSize);
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            Log.Write("no se pudo cargar Isla.ico, se dibuja el icono", ex);
+        }
+
+        return BuildIcon();
     }
 
     /// <summary>Icono dibujado en memoria: una pildora oscura con el punto lavanda.</summary>
