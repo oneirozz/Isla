@@ -1,5 +1,6 @@
 # Isla
 
+[![compilar](https://github.com/oneirozz/Isla/actions/workflows/build.yml/badge.svg)](https://github.com/oneirozz/Isla/actions/workflows/build.yml)
 [![Ko-fi](https://img.shields.io/badge/Ko--fi-apoyar%20el%20proyecto-FF5E5B?logo=ko-fi&logoColor=white)](https://ko-fi.com/E6N32AMGD4)
 
 Una «dynamic island» para Windows 10/11 escrita en **C# + WPF**, sin Microsoft Store
