@@ -1,0 +1,47 @@
+name: compilar
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  compilar:
+    name: Compilar (Release)
+    runs-on: windows-latest
+    steps:
+      - name: Descargar el código
+        uses: actions/checkout@v4
+
+      - name: Instalar .NET 8
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+
+      - name: Restaurar
+        run: dotnet restore Isla.csproj
+
+      # -warnaserror:CS convierte cualquier advertencia del compilador de C# en
+      # un fallo. Es la regla que pide CONTRIBUTING.md, comprobada de verdad.
+      - name: Compilar sin advertencias
+        run: dotnet build Isla.csproj -c Release --no-restore -warnaserror:CS
+
+      - name: Publicar el ejecutable
+        if: github.event_name == 'workflow_dispatch'
+        run: >
+          dotnet publish Isla.csproj -c Release -r win-x64 --self-contained true
+          -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true
+          -p:EnableCompressionInSingleFile=true -p:DebugType=None -p:DebugSymbols=false
+          -o dist
+
+      - name: Guardar el ejecutable
+        if: github.event_name == 'workflow_dispatch'
+        uses: actions/upload-artifact@v4
+        with:
+          name: Isla-win-x64
+          path: dist/Isla.exe
+          if-no-files-found: error
