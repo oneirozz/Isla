@@ -49,6 +49,11 @@ adjunto en cada release.
 
 ## Capturas
 
+La isla se asoma al tocar el borde superior, se despliega al pasar el ratón por
+encima y se esconde sola al apartarlo:
+
+![La isla se asoma, se despliega y se vuelve a esconder](docs/pildora.gif)
+
 Isla desplegada al pasar el ratón por encima:
 
 ![Isla desplegada con la pista en curso, reloj, recordatorio y métricas](docs/screenshots/isla-desplegada.png)
