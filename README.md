@@ -1,5 +1,7 @@
 # Isla
 
+[![Ko-fi](https://img.shields.io/badge/Ko--fi-apoyar%20el%20proyecto-FF5E5B?logo=ko-fi&logoColor=white)](https://ko-fi.com/E6N32AMGD4)
+
 Una «dynamic island» para Windows 10/11 escrita en **C# + WPF**, sin Microsoft Store
 y sin dependencias externas: un `.exe` autocontenido y cuatro archivos JSON.
 
@@ -356,6 +358,24 @@ isla/
 Mira `%LOCALAPPDATA%\Isla\isla.log` (desde la bandeja: **Abrir carpeta de datos**).
 Cada arranque deja una línea `--- arranque ---` y cualquier fallo se escribe con su
 excepción.
+
+## Contribuir y apoyar
+
+Los fallos y las ideas van en
+[Issues](https://github.com/oneirozz/Isla/issues). No hay plantilla ni ceremonia:
+cuenta qué esperabas, qué pasó y, si puedes, adjunta `%LOCALAPPDATA%\Isla\isla.log`.
+Las propuestas de código se agradecen como pull requests pequeñas y con un objetivo
+claro.
+
+Isla es gratis y seguirá siéndolo: licencia MIT, sin cuentas, sin telemetría y sin
+funciones de pago. Si te resulta útil y quieres que le dedique más horas, puedes
+invitarme a un café:
+
+[![Invítame a un café en Ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/E6N32AMGD4)
+
+El dinero va a tiempo de desarrollo y a probar en equipos reales. No da acceso a nada
+exclusivo ni prioridad: lo que se arregla o se añade depende de su utilidad, no de
+quién lo pida ni de si ha donado.
 
 ## Licencia
 
