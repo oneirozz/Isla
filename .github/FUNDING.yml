@@ -1,4 +1,3 @@
 # Botón «Sponsor» del repositorio (aparece en la cabecera del repo).
-# `ko_fi` es el canal nativo; `custom` repite la misma página como respaldo.
+# Ko-fi es una de las plataformas que GitHub reconoce de forma nativa.
 ko_fi: E6N32AMGD4
-custom: ["https://ko-fi.com/E6N32AMGD4"]
