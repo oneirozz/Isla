@@ -94,7 +94,8 @@ Estas no son preferencias de estilo: son lo que mantiene la app como es.
 - **C# 12**, `Nullable` e `ImplicitUsings` activados, tal como está el `.csproj`.
 - **Identificadores en inglés** (`ActivityService`, `_lastMedia`), **comentarios y
   texto de interfaz en español**. Es lo que hay en todo el proyecto; no lo mezcles.
-- Archivos con BOM UTF-8 y fin de línea CRLF.
+- Archivos en **UTF-8 sin BOM** y fin de línea **CRLF** (el `.csproj` de la plantilla
+  sí trae BOM: déjalo como está).
 - Comentarios solo donde el código no se explica solo: el porqué, no el qué. Los
   nombres de Win32 y las constantes raras sí se comentan.
 - Métodos cortos y con una responsabilidad. `IslaWindow.xaml.cs` ya es el archivo
