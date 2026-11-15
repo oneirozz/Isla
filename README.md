@@ -13,6 +13,22 @@ Explorador, la canción en curso o, si no hay nada, la hora.
 
 ---
 
+## Descargar
+
+La versión publicada está en **[Releases](https://github.com/oneirozz/Isla/releases/latest)**:
+baja `Isla.exe` y ejecútalo. Es un único archivo autocontenido, sin instalador.
+
+El ejecutable no está firmado, así que SmartScreen puede pedir confirmación la
+primera vez («Más información» → «Ejecutar de todas formas»).
+
+## Qué no está en el repositorio
+
+Aquí solo se versiona el código fuente y la documentación. `bin/`, `obj/` y `dist/`
+son salida de compilación: `dotnet build` y `dotnet publish` las regeneran, y
+guardar binarios de 74 MB en el historial engordaría el repo para siempre, además de
+quedar obsoletos en cuanto cambia una línea de código. El `.exe` listo para usar va
+adjunto en cada release.
+
 ## Qué hace
 
 | Módulo | Estado | Detalle |
