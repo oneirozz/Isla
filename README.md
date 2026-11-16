@@ -1,5 +1,7 @@
 # Isla
 
+**Español** · [English](README.en.md)
+
 [![compilar](https://github.com/oneirozz/Isla/actions/workflows/build.yml/badge.svg)](https://github.com/oneirozz/Isla/actions/workflows/build.yml)
 [![Ko-fi](https://img.shields.io/badge/Ko--fi-apoyar%20el%20proyecto-FF5E5B?logo=ko-fi&logoColor=white)](https://ko-fi.com/E6N32AMGD4)
 
@@ -63,6 +65,11 @@ Al recogerse, la píldora deja a la vista la actividad en curso:
 
 ![Píldora recogida mostrando la canción en curso en lugar de la hora](docs/screenshots/pildora-musica.png)
 
+Y una copia del Explorador, detectada mientras el diálogo de progreso solo enseña el
+porcentaje:
+
+![Píldora recogida mostrando Copiando… con el icono de copiar](docs/screenshots/pildora-copia.png)
+
 Capturas tomadas en 1920×1080 al 100 % de escala (Windows 10), recortadas a la
 zona superior de la pantalla.
 
@@ -94,7 +101,7 @@ lo tienes dentro del monorepo).
 # el SDK instalado con scoop puede no estar en el PATH del sistema
 $env:PATH = "C:\Users\<usuario>\scoop\apps\dotnet-sdk\current;" + $env:PATH
 
-dotnet build Isla.csproj -c Release
+dotnet build Isla.sln -c Release
 
 dotnet publish Isla.csproj -c Release -r win-x64 --self-contained true `
   -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true `
@@ -105,6 +112,20 @@ dotnet publish Isla.csproj -c Release -r win-x64 --self-contained true `
 Para llevarla a otro PC basta con copiar ese archivo. Si prefieres un ejecutable
 pequeño, publica con `--self-contained false` e instala el **.NET 8 Desktop
 Runtime** en el equipo de destino.
+
+### Pruebas
+
+La lógica que no toca la interfaz vive en `Isla.Core` y se prueba con un ejecutable
+propio, sin xUnit ni paquetes de NuGet:
+
+```powershell
+dotnet run --project tests\Isla.Tests -c Release
+```
+
+Cada caso imprime `ok` o `FALLO` y el proceso termina con código 1 si algo falla, que
+es lo que mira la integración continua. Cubre el reconocimiento de la actividad del
+Explorador, la prioridad de la píldora, las medidas de la isla, los iconos del estante
+y las reglas de los recordatorios.
 
 ## Cuándo se muestra
 
@@ -138,9 +159,12 @@ Al recogerse no deja la hora: deja el último estado útil, en este orden:
    la muestra en la barra de tareas.
 
 La actividad se sondea cada 800 ms mirando las ventanas de progreso visibles de
-`explorer.exe`. No hay una API pública de progreso global, así que es una heurística
-por título: reconoce los textos en español e inglés de Windows 10/11. Una copia hecha
-desde otro programa no aparece como actividad; la música sí, venga de donde venga.
+`explorer.exe`. No hay una API pública de progreso global, así que es una heurística:
+en Windows 10 esa ventana se llama `OperationStatusWindow` y su título es solo el
+porcentaje («84 % completado»), de modo que el texto de la operación se lee de sus
+controles con UI Automation, en un hilo aparte para no frenar la interfaz. Reconoce
+los textos en español e inglés. Una copia hecha desde otro programa no aparece como
+actividad; la música sí, venga de donde venga.
 
 ## Efectos visuales y GPU
 
@@ -325,11 +349,13 @@ lo anota en el log y arranca con la lista vacía en vez de fallar.
   variante dependiente del runtime comparte las DLL de .NET y suele gastar menos. No
   es Electron, pero tampoco una app Win32 de 13 MB.
 - **Sin portapapeles** por decisión de diseño: `Win+V` ya lo cubre.
-- **La actividad del Explorador es una heurística**: se leen los títulos de sus
+- **La actividad del Explorador es una heurística**: se leen los textos de sus
   ventanas de progreso (en español o inglés), porque Windows no expone una API de
-  progreso global. Las copias hechas desde otros programas no se anuncian en la
-  píldora; si el Explorador cambia esos textos en una versión futura, habrá que
-  añadirlos a `ActivityService.cs`.
+  progreso global. En Windows 10 el título es solo el porcentaje, así que el texto de
+  la operación se saca de los controles con UI Automation; si una versión futura
+  cambia esos nombres, habrá que ajustarlo en `ActivityService.cs` y en
+  `Isla.Core/ShellActivity.cs`. Las copias hechas desde otros programas no se
+  anuncian en la píldora.
 - **Un solo monitor:** la isla se coloca en el monitor principal. En una configuración
   multimonitor no se mueve al secundario.
 - **La detección de GPU es una heurística** por nombre comercial, no una consulta a
@@ -344,8 +370,14 @@ lo anota en el log y arranca con la lista vacía en vez de fallar.
 isla/
   App.xaml / App.xaml.cs          estilos, bandeja, atajos, instancia única
   IslaWindow.xaml / .xaml.cs      isla, animaciones, módulos y cableado
+  Isla.Core/                      lógica pura, sin WPF: la usan la app y las pruebas
+    ShellActivity.cs              qué operación es y cómo se reconoce su texto
+    PillPresenter.cs              qué cuenta la píldora y con qué prioridad
+    IslandLayout.cs               medidas según el ancho de pantalla
+    FileGlyphs.cs                 iconos del estante por extensión
+    ReminderRules.cs              parseo, orden y avisos de recordatorios
   Services/
-    ActivityService.cs            copias y operaciones del Explorador para la píldora
+    ActivityService.cs            ventanas de progreso del Explorador (Win32 + UIA)
     MediaService.cs               música: SMTC y respaldo API de Winamp (AIMP)
     StatsService.cs               CPU y RAM por Win32
     ReminderService.cs            recordatorios en JSON
@@ -355,6 +387,7 @@ isla/
     HardwareService.cs            detección de GPU y recomendación de efectos
   Interop/NativeMethods.cs        estilos de ventana, atajos, sonido
   Diagnostics/Log.cs              log a archivo
+  tests/Isla.Tests/               pruebas de Isla.Core, en consola y sin xUnit
   docs/screenshots/               capturas para el README
   app.manifest                    DPI por monitor, compatibilidad Win10/11
 ```

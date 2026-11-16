@@ -44,8 +44,9 @@ enseñar en una píldora de 300 px y que no obligue a abrir una ventana aparte.
 
 1. Haz un fork y trabaja en una rama con nombre descriptivo
    (`arreglo-pildora-vacia`, `recordatorios-repetidos`).
-2. Compila y pruébalo antes de abrir el pull request. No hay tests automáticos: la
-   comprobación es abrir la app y usar lo que has tocado.
+2. Compila y pruébalo antes de abrir el pull request. Las pruebas de la lógica pura
+   se ejecutan con `dotnet run --project tests\Isla.Tests -c Release`; lo que toca la
+   interfaz se comprueba abriendo la app y usando lo que has cambiado.
 3. Un pull request por cosa. Si de paso arreglas tres fallos distintos, van en tres
    pull requests.
 4. Explica en el pull request **qué cambia y por qué**. Si toca la interfaz, adjunta
@@ -54,7 +55,7 @@ enseñar en una píldora de 300 px y que no obligue a abrir una ventana aparte.
 ### Compilar
 
 ```powershell
-dotnet build Isla.csproj -c Release
+dotnet build Isla.sln -c Release
 ```
 
 Para generar el ejecutable de distribución:
@@ -69,9 +70,11 @@ dotnet publish Isla.csproj -c Release -r win-x64 --self-contained true `
 El binario de desarrollo se compila sin errores **ni advertencias**. Si aparece una
 advertencia nueva, se arregla o se justifica en el pull request.
 
-No hay suite de tests y no se pide una. Si tu cambio es de lógica pura (por ejemplo,
-elegir qué enseña la píldora), separa esa decisión en un método que se pueda leer de
-un vistazo y explica en el pull request cómo lo comprobaste a mano.
+No hay xUnit ni paquetes de prueba: `tests/Isla.Tests` es un ejecutable de consola que
+imprime `ok` o `FALLO` por caso y termina con código 1 si algo falla. Si tu cambio es
+de lógica pura (por ejemplo, elegir qué enseña la píldora), ponla en `Isla.Core` y
+añade un caso en `tests/Isla.Tests/Program.cs`; si toca la interfaz, explica en el pull
+request cómo lo comprobaste a mano.
 
 ## Reglas del proyecto
 
@@ -109,7 +112,7 @@ Estas no son preferencias de estilo: son lo que mantiene la app como es.
 | Quiero cambiar… | Archivo |
 |---|---|
 | El aspecto, el tamaño o las animaciones de la isla | `IslaWindow.xaml`, `IslaWindow.xaml.cs` |
-| Qué enseña la píldora recogida | `RenderCompact` en `IslaWindow.xaml.cs` y `Services/ActivityService.cs` |
+| Qué enseña la píldora recogida | `Isla.Core/PillPresenter.cs` y `Services/ActivityService.cs` |
 | La música, SMTC o el respaldo de Winamp/AIMP | `Services/MediaService.cs` |
 | Cuándo se asoma y cuándo se esconde | `IslaWindow.xaml.cs` (bucle de cursor y auto-ocultado) |
 | La bandeja, los atajos o el arranque | `App.xaml.cs` |
