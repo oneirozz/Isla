@@ -6,6 +6,7 @@ using System.Windows.Media;
 using System.Windows.Media.Animation;
 using System.Windows.Media.Effects;
 using System.Windows.Threading;
+using Isla.Core;
 using Isla.Diagnostics;
 using Isla.Interop;
 using Isla.Services;
@@ -81,9 +82,10 @@ public partial class IslaWindow : Window
         // El ancho se limita para que en un portatil de 1366 px no ocupe media
         // pantalla, y en uno grande no quede ridiculamente estrecho.
         var screenWidth = SystemParameters.PrimaryScreenWidth;
-        DockWidth = Math.Clamp(Math.Round(screenWidth * 0.30), 340, 480);
-        CompactWidth = Math.Clamp(Math.Round(DockWidth * 0.52), 200, 260);
-        WindowWidth = DockWidth + 40;
+        var layout = IslandLayout.For(screenWidth);
+        DockWidth = layout.DockWidth;
+        CompactWidth = layout.CompactWidth;
+        WindowWidth = layout.WindowWidth;
 
         Width = WindowWidth;
         Height = WindowHeight;
@@ -279,40 +281,24 @@ public partial class IslaWindow : Window
     /// </summary>
     private void RenderCompact()
     {
-        var accent = (Brush)FindResource("Accent");
-        var primary = (Brush)FindResource("TextPrimary");
-        var secondary = (Brush)FindResource("TextSecondary");
-        var muted = (Brush)FindResource("TextMuted");
+        var media = _lastMedia is { } snapshot
+            ? new PillMedia(snapshot.HasSession, snapshot.Title, snapshot.Artist, snapshot.IsPlaying)
+            : null;
 
-        if (_shellActivity is { } activity)
-        {
-            SetCompact(activity.Glyph, $"{activity.Verb}…", accent, primary, 1);
-            CompactText.ToolTip = activity.Title;
-            return;
-        }
+        var view = PillPresenter.Choose(_shellActivity, media, DateTime.Now);
 
-        if (_lastMedia is { HasSession: true } media)
-        {
-            var title = !string.IsNullOrWhiteSpace(media.Title)
-                ? media.Title
-                : !string.IsNullOrWhiteSpace(media.Artist) ? media.Artist : "Reproduciendo";
-
-            // En pausa se atenua: de un vistazo se sabe si suena o no.
-            SetCompact("\uE8D6", title,
-                media.IsPlaying ? accent : secondary,
-                media.IsPlaying ? primary : secondary,
-                media.IsPlaying ? 1 : 0.35);
-
-            CompactText.ToolTip = string.IsNullOrWhiteSpace(media.Artist)
-                ? title
-                : $"{media.Title} — {media.Artist}";
-            return;
-        }
-
-        var time = DateTime.Now.ToString("HH:mm");
-        SetCompact("\uE823", time, muted, muted, 0);
-        CompactText.ToolTip = "Sin actividad en curso";
+        SetCompact(view.Glyph, view.Text, BrushFor(view.IconTone), BrushFor(view.TextTone), view.DotOpacity);
+        CompactText.ToolTip = view.Tooltip;
     }
+
+    /// <summary>Traduce el tono de la logica pura al pincel del tema.</summary>
+    private Brush BrushFor(PillTone tone) => (Brush)FindResource(tone switch
+    {
+        PillTone.Accent => "Accent",
+        PillTone.Primary => "TextPrimary",
+        PillTone.Secondary => "TextSecondary",
+        _ => "TextMuted",
+    });
 
     private void SetCompact(string glyph, string text, Brush iconBrush, Brush textBrush, double dotOpacity)
     {
@@ -360,16 +346,14 @@ public partial class IslaWindow : Window
         var next = _reminders.Next();
         if (next is null)
         {
-            ReminderValue.Text = "ninguno";
+            ReminderValue.Text = ReminderRules.Label(null);
             ReminderValue.Foreground = (Brush)FindResource("TextMuted");
             ReminderValue.FontWeight = FontWeights.Normal;
             ReminderButton.ToolTip = "Clic para añadir";
             return;
         }
 
-        ReminderValue.Text = next.Due is { } due
-            ? $"{due:HH:mm} · {next.Text}"
-            : next.Text;
+        ReminderValue.Text = ReminderRules.Label(ReminderService.AsItem(next));
         ReminderValue.Foreground = (Brush)FindResource("TextPrimary");
         ReminderValue.FontWeight = FontWeights.SemiBold;
         ReminderButton.ToolTip = "Clic para marcarlo como hecho";
@@ -545,7 +529,7 @@ public partial class IslaWindow : Window
         {
             FontFamily = (FontFamily)FindResource("IconFont"),
             FontSize = 11,
-            Text = isFolder ? "\uE8B7" : GlyphFor(Path.GetExtension(path)),
+            Text = FileGlyphs.For(Path.GetExtension(path), isFolder),
             Foreground = (Brush)FindResource("Accent"),
             VerticalAlignment = VerticalAlignment.Center,
             Margin = new Thickness(0, 0, 6, 0),
@@ -619,16 +603,6 @@ public partial class IslaWindow : Window
 
         return chip;
     }
-
-    private static string GlyphFor(string extension) => extension.ToLowerInvariant() switch
-    {
-        ".png" or ".jpg" or ".jpeg" or ".gif" or ".bmp" or ".webp" or ".svg" => "\uE91B",
-        ".mp3" or ".wav" or ".flac" or ".m4a" or ".ogg" => "\uE8D6",
-        ".mp4" or ".mkv" or ".webm" or ".avi" or ".mov" => "\uE714",
-        ".zip" or ".7z" or ".rar" or ".tar" or ".gz" => "\uE7B8",
-        ".pdf" or ".doc" or ".docx" or ".txt" or ".md" or ".rtf" or ".odt" => "\uE8A5",
-        _ => "\uE7C3",
-    };
 
     /// <summary>Añade rutas al estante (desde arrastre o desde el menu de la bandeja).</summary>
     internal void AddToShelf(IEnumerable<string> paths)

@@ -1,0 +1,18 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- Pruebas sin xUnit ni NuGet: un ejecutable que devuelve 1 si algo falla. -->
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net8.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <AssemblyName>Isla.Tests</AssemblyName>
+    <RootNamespace>Isla.Tests</RootNamespace>
+    <IsPackable>false</IsPackable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\Isla.Core\Isla.Core.csproj" />
+  </ItemGroup>
+
+</Project>

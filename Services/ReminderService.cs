@@ -1,6 +1,7 @@
 using System.IO;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using Isla.Core;
 using Isla.Diagnostics;
 
 namespace Isla.Services;
@@ -68,43 +69,18 @@ internal sealed class ReminderService
     /// <summary>El que toca ahora: primero los que tienen hora mas cercana.</summary>
     internal Reminder? Next()
     {
-        var pending = Pending;
-        if (pending.Count == 0) return null;
-
-        return pending
-            .OrderBy(r => r.Due ?? DateTime.MaxValue)
-            .ThenBy(r => r.Text, StringComparer.CurrentCulture)
-            .First();
+        var item = ReminderRules.Next(_items.Select(AsItem));
+        return item is null ? null : Find(item);
     }
 
     /// <summary>
     /// Acepta "texto" o "texto @18:30" (tambien "@manana" para el dia siguiente).
+    /// El texto se entiende en <see cref="ReminderRules.Parse"/>.
     /// </summary>
     internal Reminder Add(string raw)
     {
-        var text = (raw ?? string.Empty).Trim();
-        DateTime? due = null;
-
-        var at = text.LastIndexOf('@');
-        if (at > 0)
-        {
-            var tail = text[(at + 1)..].Trim();
-            var head = text[..at].Trim();
-
-            if (DateTime.TryParse(tail, out var parsed))
-            {
-                due = parsed;
-            }
-            else if (tail.Equals("manana", StringComparison.OrdinalIgnoreCase) ||
-                     tail.Equals("mañana", StringComparison.OrdinalIgnoreCase))
-            {
-                due = DateTime.Today.AddDays(1).AddHours(9);
-            }
-
-            if (due is not null && head.Length > 0) text = head;
-        }
-
-        var reminder = new Reminder { Text = text, Due = due };
+        var parsed = ReminderRules.Parse(raw, DateTime.Today);
+        var reminder = new Reminder { Text = parsed.Text, Due = parsed.Due };
         _items.Add(reminder);
         Save();
         return reminder;
@@ -116,17 +92,22 @@ internal sealed class ReminderService
     /// </summary>
     internal Reminder? TakeDue(DateTime now)
     {
-        var item = _items
-            .Where(r => !r.Done && !r.Notified && r.Due is { } due && due <= now)
-            .OrderBy(r => r.Due)
-            .FirstOrDefault();
+        var item = ReminderRules.FirstDue(_items.Select(AsItem), now);
+        var reminder = item is null ? null : Find(item);
+        if (reminder is null) return null;
 
-        if (item is null) return null;
-
-        item.Notified = true;
+        reminder.Notified = true;
         Save();
-        return item;
+        return reminder;
     }
+
+    /// <summary>El recordatorio guardado, en la forma que usan las reglas puras.</summary>
+    internal static ReminderItem AsItem(Reminder reminder) =>
+        new(reminder.Text, reminder.Due, reminder.Done, reminder.Notified);
+
+    /// <summary>El guardado que corresponde a una copia devuelta por las reglas.</summary>
+    private Reminder? Find(ReminderItem item) =>
+        _items.FirstOrDefault(r => AsItem(r) == item);
 
     internal void Complete(string id)
     {

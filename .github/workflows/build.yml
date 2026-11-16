@@ -23,12 +23,17 @@ jobs:
           dotnet-version: 8.0.x
 
       - name: Restaurar
-        run: dotnet restore Isla.csproj
+        run: dotnet restore Isla.sln
 
       # -warnaserror:CS convierte cualquier advertencia del compilador de C# en
       # un fallo. Es la regla que pide CONTRIBUTING.md, comprobada de verdad.
       - name: Compilar sin advertencias
-        run: dotnet build Isla.csproj -c Release --no-restore -warnaserror:CS
+        run: dotnet build Isla.sln -c Release --no-restore -warnaserror:CS
+
+      # Las pruebas son un ejecutable propio (sin xUnit ni NuGet): si algun caso
+      # falla, termina con codigo 1 y el paso se pone en rojo.
+      - name: Probar la logica
+        run: dotnet run --project tests/Isla.Tests -c Release --no-build
 
       - name: Publicar el ejecutable
         if: github.event_name == 'workflow_dispatch'

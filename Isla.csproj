@@ -12,13 +12,16 @@
     <ApplicationIcon>Isla.ico</ApplicationIcon>
     <AssemblyName>Isla</AssemblyName>
     <RootNamespace>Isla</RootNamespace>
-    <Version>1.0.0</Version>
-    <AssemblyVersion>1.0.0.0</AssemblyVersion>
-    <FileVersion>1.0.0.0</FileVersion>
+    <Version>1.1.0</Version>
+    <AssemblyVersion>1.1.0.0</AssemblyVersion>
+    <FileVersion>1.1.0.0</FileVersion>
     <Product>Isla</Product>
     <Description>Dynamic Island para Windows 10/11</Description>
     <!-- WFO0003 avisa del DPI del manifiesto; esta app es WPF, no WinForms. -->
     <NoWarn>$(NoWarn);WFO0003;WFAC010</NoWarn>
+    <!-- El proyecto vive en la raiz: que no se trague los .cs de la libreria ni
+         de los tests, que son proyectos aparte. -->
+    <DefaultItemExcludes>$(DefaultItemExcludes);Isla.Core\**;tests\**</DefaultItemExcludes>
   </PropertyGroup>
 
   <!-- WPF y WinForms comparten nombres (Application, Color, MouseEventArgs).
@@ -31,6 +34,11 @@
   <!-- El icono va dentro del ejecutable y tambien como recurso, para la bandeja. -->
   <ItemGroup>
     <Resource Include="Isla.ico" />
+  </ItemGroup>
+
+  <!-- La logica sin interfaz vive aparte y se prueba sin abrir la isla. -->
+  <ItemGroup>
+    <ProjectReference Include="Isla.Core\Isla.Core.csproj" />
   </ItemGroup>
 
 </Project>

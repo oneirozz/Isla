@@ -1,62 +1,34 @@
 using System.Diagnostics;
 using System.Text;
+using System.Windows.Automation;
+using Isla.Core;
+using Isla.Diagnostics;
 using Isla.Interop;
 
 namespace Isla.Services;
 
-/// <summary>Operacion larga que el Explorador esta haciendo en este momento.</summary>
-internal enum ShellActivityKind
-{
-    Copy,
-    Move,
-    Delete,
-    Compress,
-    Extract,
-}
-
-/// <summary>
-/// Actividad detectada en el Explorador. El titulo de su ventana de progreso es
-/// lo unico que Windows expone publicamente (no hay API de progreso global).
-/// </summary>
-internal sealed record ShellActivity(ShellActivityKind Kind, string Verb, string Title)
-{
-    /// <summary>Icono de Segoe MDL2 Assets para la pildora recogida.</summary>
-    internal string Glyph => Kind switch
-    {
-        ShellActivityKind.Copy => "\uE8C8",
-        ShellActivityKind.Move => "\uE8DE",
-        ShellActivityKind.Delete => "\uE74D",
-        ShellActivityKind.Compress => "\uE8B7",
-        ShellActivityKind.Extract => "\uE896",
-        _ => "\uE8C8",
-    };
-}
-
 /// <summary>
 /// Detecta copias, movimientos, borrados, compresiones y extracciones del
-/// Explorador mirando sus ventanas de progreso. Se limita a explorer.exe y a
-/// titulos conocidos (espanol e ingles) para no confundir cualquier ventana
-/// llamada "Copying..." con una operacion real.
+/// Explorador mirando sus ventanas de progreso. Se limita a explorer.exe para no
+/// confundir cualquier ventana llamada "Copying..." con una operacion real.
+///
+/// En Windows 10 el titulo de esa ventana es solo el porcentaje ("84%
+/// completado") y el texto de la operacion vive dentro de sus controles, asi que
+/// ahi se lee con UI Automation, en un hilo aparte: hablar con explorer.exe con
+/// el disco a tope puede tardar y la interfaz no debe esperar.
 /// </summary>
 internal sealed class ActivityService
 {
-    private static readonly (string Stem, ShellActivityKind Kind, string Verb)[] Patterns =
-    {
-        ("copiando", ShellActivityKind.Copy, "Copiando"),
-        ("copying", ShellActivityKind.Copy, "Copiando"),
-        ("moviendo", ShellActivityKind.Move, "Moviendo"),
-        ("moving", ShellActivityKind.Move, "Moviendo"),
-        ("eliminando", ShellActivityKind.Delete, "Eliminando"),
-        ("deleting", ShellActivityKind.Delete, "Eliminando"),
-        ("comprimiendo", ShellActivityKind.Compress, "Comprimiendo"),
-        ("compressing", ShellActivityKind.Compress, "Comprimiendo"),
-        ("extrayendo", ShellActivityKind.Extract, "Extrayendo"),
-        ("extracting", ShellActivityKind.Extract, "Extrayendo"),
-    };
+    private const string ProgressWindowClass = "OperationStatusWindow";
 
     private readonly Dictionary<uint, string> _processNames = new();
     private ShellActivity? _last;
     private DateTime _lastScan = DateTime.MinValue;
+
+    // ---- lectura de la ventana de progreso, en segundo plano ----
+    private IntPtr _dialogWindow;
+    private volatile bool _dialogReading;
+    private volatile ShellActivity? _dialogActivity;
 
     internal ShellActivity? Detect()
     {
@@ -72,7 +44,9 @@ internal sealed class ActivityService
         if (_processNames.Count > 256) _processNames.Clear();
 
         ShellActivity? found = null;
+        var dialog = IntPtr.Zero;
         var title = new StringBuilder(512);
+        var className = new StringBuilder(128);
 
         NativeMethods.EnumWindows((window, _) =>
         {
@@ -81,22 +55,112 @@ internal sealed class ActivityService
             NativeMethods.GetWindowThreadProcessId(window, out var pid);
             if (pid == 0 || ProcessName(pid) != "explorer") return true;
 
+            className.Clear();
+            NativeMethods.GetClassNameW(window, className, className.Capacity);
+            if (className.ToString() == ProgressWindowClass)
+            {
+                dialog = window;
+                return false;
+            }
+
+            // Respaldo: en otras versiones el titulo si nombra la operacion.
             title.Clear();
             if (NativeMethods.GetWindowTextW(window, title, title.Capacity) <= 0) return true;
 
-            var text = title.ToString().Trim();
-            foreach (var (stem, kind, verb) in Patterns)
+            if (ShellActivities.Match(title.ToString()) is { } activity)
             {
-                if (!text.Contains(stem, StringComparison.OrdinalIgnoreCase)) continue;
-
-                found = new ShellActivity(kind, verb, text);
+                found = activity;
                 return false;
             }
 
             return true;
         }, IntPtr.Zero);
 
+        if (dialog != IntPtr.Zero)
+        {
+            WatchDialog(dialog);
+            return _dialogActivity;
+        }
+
+        StopWatchingDialog();
         return found;
+    }
+
+    /// <summary>
+    /// Pide el texto de la ventana de progreso si aun no se conoce. Una lectura
+    /// por ventana: mientras dura la operacion el texto se reutiliza.
+    /// </summary>
+    private void WatchDialog(IntPtr window)
+    {
+        if (window != _dialogWindow)
+        {
+            Volatile.Write(ref _dialogWindow, window);
+            _dialogActivity = null;
+        }
+
+        if (_dialogReading || _dialogActivity is not null) return;
+        _dialogReading = true;
+
+        var handle = window;
+        var thread = new Thread(() =>
+        {
+            try
+            {
+                var activity = ReadDialog(handle);
+                if (Volatile.Read(ref _dialogWindow) == handle) _dialogActivity = activity;
+            }
+            catch (Exception ex)
+            {
+                Log.Write("no se pudo leer la ventana de progreso", ex);
+            }
+            finally
+            {
+                _dialogReading = false;
+            }
+        })
+        {
+            IsBackground = true,
+            Name = "isla-actividad",
+        };
+
+        thread.SetApartmentState(ApartmentState.MTA);
+        thread.Start();
+    }
+
+    private void StopWatchingDialog()
+    {
+        if (Volatile.Read(ref _dialogWindow) == IntPtr.Zero && _dialogActivity is null) return;
+        Volatile.Write(ref _dialogWindow, IntPtr.Zero);
+        _dialogActivity = null;
+    }
+
+    /// <summary>
+    /// Nombres de los controles de la ventana, de fuera adentro. La operacion es
+    /// el primero que la describe ("Copiando 20.001 elementos de copia a destino").
+    /// </summary>
+    private static ShellActivity? ReadDialog(IntPtr window)
+    {
+        var root = AutomationElement.FromHandle(window);
+        if (root is null) return null;
+
+        var elements = root.FindAll(TreeScope.Descendants, Condition.TrueCondition);
+        foreach (AutomationElement element in elements)
+        {
+            string name;
+            try
+            {
+                name = element.Current.Name;
+            }
+            catch (ElementNotAvailableException)
+            {
+                // La ventana se esta redibujando: puede faltar algun control.
+                continue;
+            }
+
+            if (ShellActivities.Match(name) is { } activity) return activity;
+        }
+
+        return null;
     }
 
     /// <summary>Nombre del proceso, cacheado: se consulta una vez por PID.</summary>

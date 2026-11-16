@@ -1,0 +1,14 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- Logica pura, sin WPF ni Win32: se prueba en cualquier maquina con el SDK. -->
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <AssemblyName>Isla.Core</AssemblyName>
+    <RootNamespace>Isla.Core</RootNamespace>
+    <Description>Reglas de la isla que no dependen de la interfaz</Description>
+    <IsPackable>false</IsPackable>
+  </PropertyGroup>
+
+</Project>
